@@ -36,7 +36,7 @@ function CameraRig() {
     camera.position.y +=
       (mouse2D.y * 0.2 + sp * 1.5 - camera.position.y) * 0.03;
     camera.position.z += (baseZ - camera.position.z) * 0.06;
-    camera.lookAt(0, 0.4, 0);
+    camera.lookAt(0, 0.6, 0);
   });
 
   return null;
@@ -77,8 +77,8 @@ function BirdLogo() {
 
   return (
     <Float speed={0.6} rotationIntensity={0.03} floatIntensity={0.5}>
-      <mesh ref={meshRef} position={[0, 0.6, 0.5]}>
-        <planeGeometry args={[5.5, 2.8]} />
+      <mesh ref={meshRef} position={[0, 0.8, 0.5]}>
+        <planeGeometry args={[4.2, 2.1]} />
         <meshBasicMaterial
           map={texture}
           blending={THREE.AdditiveBlending}
@@ -138,27 +138,27 @@ function OrbitalRings() {
     <group ref={ringsRef}>
       <Torus
         ref={ring1}
-        args={[2.4, 0.09, 48, 200]}
+        args={[1.8, 0.07, 48, 200]}
         rotation={[Math.PI / 5, 0.15, 0]}
-        position={[0, 0.5, 0]}
+        position={[0, 0.7, 0]}
       >
         {ringMat("#c9a96e", 0.08, 0.95)}
       </Torus>
 
       <Torus
         ref={ring2}
-        args={[2.7, 0.07, 48, 200]}
+        args={[2.1, 0.055, 48, 200]}
         rotation={[Math.PI / 3.5, -0.4, 0.15]}
-        position={[0, 0.4, 0]}
+        position={[0, 0.6, 0]}
       >
         {ringMat("#b8943e", 0.12, 0.85)}
       </Torus>
 
       <Torus
         ref={ring3}
-        args={[2.0, 0.08, 48, 200]}
+        args={[1.5, 0.065, 48, 200]}
         rotation={[Math.PI / 4, 0.5, -0.1]}
-        position={[0, 0.6, 0]}
+        position={[0, 0.8, 0]}
       >
         {ringMat("#c9a050", 0.06, 0.9)}
       </Torus>
@@ -175,10 +175,10 @@ function ChromeSpheres() {
   ];
   const basePositions = useMemo(
     () => [
-      new THREE.Vector3(2.8, 2.5, 1.2),
-      new THREE.Vector3(-2.0, 2.8, 0.6),
-      new THREE.Vector3(1.8, -1.8, 1.0),
-      new THREE.Vector3(-3.0, 0.2, -0.4),
+      new THREE.Vector3(2.2, 2.2, 1.0),
+      new THREE.Vector3(-1.8, 2.4, 0.5),
+      new THREE.Vector3(2.5, 0.3, 0.8),
+      new THREE.Vector3(-2.4, 0.4, -0.3),
     ],
     [],
   );
