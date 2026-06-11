@@ -82,7 +82,7 @@ function BirdLogo() {
         <meshBasicMaterial
           map={texture}
           blending={THREE.AdditiveBlending}
-          color="#d4a850"
+          color="#ffffff"
           transparent
           opacity={1}
           depthWrite={false}
@@ -123,14 +123,14 @@ function OrbitalRings() {
         -Math.PI / 4.5 + t * 0.04 + sp * Math.PI * 0.4;
   });
 
-  const ringMat = (color: string, roughness: number, opacity: number) => (
-    <meshStandardMaterial
+  const ringMat = (color: string, opacity: number) => (
+    <meshBasicMaterial
       color={color}
-      roughness={roughness}
-      metalness={0.85}
       transparent
       opacity={opacity}
-      envMapIntensity={0.8}
+      blending={THREE.AdditiveBlending}
+      depthWrite={false}
+      toneMapped={false}
     />
   );
 
@@ -138,29 +138,29 @@ function OrbitalRings() {
     <group ref={ringsRef}>
       <Torus
         ref={ring1}
-        args={[1.8, 0.07, 48, 200]}
+        args={[1.8, 0.015, 48, 200]}
         rotation={[Math.PI / 5, 0.15, 0]}
         position={[0, 0.7, 0]}
       >
-        {ringMat("#c9a96e", 0.08, 0.95)}
+        {ringMat("#c9a96e", 0.35)}
       </Torus>
 
       <Torus
         ref={ring2}
-        args={[2.1, 0.055, 48, 200]}
+        args={[2.1, 0.012, 48, 200]}
         rotation={[Math.PI / 3.5, -0.4, 0.15]}
         position={[0, 0.6, 0]}
       >
-        {ringMat("#b8943e", 0.12, 0.85)}
+        {ringMat("#e8c864", 0.25)}
       </Torus>
 
       <Torus
         ref={ring3}
-        args={[1.5, 0.065, 48, 200]}
+        args={[1.5, 0.018, 48, 200]}
         rotation={[Math.PI / 4, 0.5, -0.1]}
         position={[0, 0.8, 0]}
       >
-        {ringMat("#c9a050", 0.06, 0.9)}
+        {ringMat("#d4af37", 0.3)}
       </Torus>
     </group>
   );
