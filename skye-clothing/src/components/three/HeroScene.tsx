@@ -10,27 +10,55 @@ import {
   useTexture,
 } from "@react-three/drei";
 import * as THREE from "three";
+import { heroScrollProgress } from "@/lib/scroll-progress";
 
-function CameraRig() {
-  const { camera } = useThree();
-  const mouse = useRef({ x: 0, y: 0 });
+const mouse2D = { x: 0, y: 0 };
 
+function useGlobalMouse() {
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      mouse.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
-      mouse.current.y = -(e.clientY / window.innerHeight - 0.5) * 2;
+      mouse2D.x = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouse2D.y = -(e.clientY / window.innerHeight - 0.5) * 2;
     };
     window.addEventListener("mousemove", onMove, { passive: true });
     return () => window.removeEventListener("mousemove", onMove);
   }, []);
+}
+
+function CameraRig() {
+  const { camera } = useThree();
+  useGlobalMouse();
 
   useFrame(() => {
-    camera.position.x += (mouse.current.x * 0.5 - camera.position.x) * 0.04;
-    camera.position.y += (mouse.current.y * 0.3 - camera.position.y) * 0.04;
-    camera.lookAt(0, 0, 0);
+    const sp = heroScrollProgress.current;
+    const baseZ = 8 + sp * 4;
+    camera.position.x += (mouse2D.x * 0.3 - camera.position.x) * 0.03;
+    camera.position.y +=
+      (mouse2D.y * 0.2 + sp * 1.5 - camera.position.y) * 0.03;
+    camera.position.z += (baseZ - camera.position.z) * 0.06;
+    camera.lookAt(0, 0.4, 0);
   });
 
   return null;
+}
+
+function InteractiveGroup({ children }: { children: React.ReactNode }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const targetRotation = useRef({ x: 0, y: 0 });
+
+  useFrame(() => {
+    if (!groupRef.current) return;
+
+    targetRotation.current.y = mouse2D.x * 0.35;
+    targetRotation.current.x = -mouse2D.y * 0.25;
+
+    groupRef.current.rotation.y +=
+      (targetRotation.current.y - groupRef.current.rotation.y) * 0.06;
+    groupRef.current.rotation.x +=
+      (targetRotation.current.x - groupRef.current.rotation.x) * 0.06;
+  });
+
+  return <group ref={groupRef}>{children}</group>;
 }
 
 function BirdLogo() {
@@ -40,23 +68,23 @@ function BirdLogo() {
   texture.repeat.set(1, 0.42);
   texture.offset.set(0, 0.58);
 
-  useFrame((state) => {
+  useFrame(() => {
     if (!meshRef.current) return;
-    meshRef.current.rotation.y =
-      Math.sin(state.clock.elapsedTime * 0.25) * 0.1;
-    meshRef.current.rotation.x =
-      Math.sin(state.clock.elapsedTime * 0.15) * 0.04;
+    const sp = heroScrollProgress.current;
+    const mat = meshRef.current.material as THREE.MeshBasicMaterial;
+    mat.opacity = 1 - sp * 1.5;
   });
 
   return (
-    <Float speed={1} rotationIntensity={0.08} floatIntensity={1.2}>
-      <mesh ref={meshRef} position={[0, 0.3, 0.5]}>
-        <planeGeometry args={[7, 3.5]} />
+    <Float speed={0.6} rotationIntensity={0.03} floatIntensity={0.5}>
+      <mesh ref={meshRef} position={[0, 0.6, 0.5]}>
+        <planeGeometry args={[5.5, 2.8]} />
         <meshBasicMaterial
           map={texture}
           blending={THREE.AdditiveBlending}
-          color="#c9a96e"
+          color="#d4a850"
           transparent
+          opacity={1}
           depthWrite={false}
           toneMapped={false}
         />
@@ -66,176 +94,189 @@ function BirdLogo() {
 }
 
 function OrbitalRings() {
-  const groupRef = useRef<THREE.Group>(null);
+  const ringsRef = useRef<THREE.Group>(null);
+  const ring1 = useRef<THREE.Mesh>(null);
+  const ring2 = useRef<THREE.Mesh>(null);
+  const ring3 = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.elapsedTime * 0.06;
+    const t = state.clock.elapsedTime;
+    const sp = heroScrollProgress.current;
+    const expansion = 1 + sp * 2.5;
+
+    if (ringsRef.current) {
+      ringsRef.current.rotation.y = t * 0.04;
     }
+
+    [ring1, ring2, ring3].forEach((ref) => {
+      if (ref.current) {
+        ref.current.scale.setScalar(expansion);
+      }
+    });
+
+    if (ring1.current)
+      ring1.current.rotation.z = t * 0.07 + sp * Math.PI * 0.5;
+    if (ring2.current)
+      ring2.current.rotation.z = -t * 0.05 + sp * Math.PI * 0.3;
+    if (ring3.current)
+      ring3.current.rotation.x =
+        -Math.PI / 4.5 + t * 0.04 + sp * Math.PI * 0.4;
   });
 
+  const ringMat = (color: string, roughness: number, opacity: number) => (
+    <meshStandardMaterial
+      color={color}
+      roughness={roughness}
+      metalness={0.85}
+      transparent
+      opacity={opacity}
+      envMapIntensity={0.8}
+    />
+  );
+
   return (
-    <group ref={groupRef}>
-      <Float speed={1} rotationIntensity={0.2} floatIntensity={0.4}>
-        <Torus args={[3.2, 0.07, 32, 128]} rotation={[Math.PI / 5, 0.2, 0]}>
-          <meshStandardMaterial
-            color="#c9a96e"
-            roughness={0.12}
-            metalness={1}
-            transparent
-            opacity={0.9}
-          />
-        </Torus>
-      </Float>
+    <group ref={ringsRef}>
+      <Torus
+        ref={ring1}
+        args={[2.4, 0.09, 48, 200]}
+        rotation={[Math.PI / 5, 0.15, 0]}
+        position={[0, 0.5, 0]}
+      >
+        {ringMat("#c9a96e", 0.08, 0.95)}
+      </Torus>
 
-      <Float speed={0.7} rotationIntensity={0.15} floatIntensity={0.3}>
-        <Torus
-          args={[3.8, 0.055, 32, 128]}
-          rotation={[Math.PI / 2.8, -0.6, 0.3]}
-        >
-          <meshStandardMaterial
-            color="#b8943e"
-            roughness={0.18}
-            metalness={1}
-            transparent
-            opacity={0.7}
-          />
-        </Torus>
-      </Float>
+      <Torus
+        ref={ring2}
+        args={[2.7, 0.07, 48, 200]}
+        rotation={[Math.PI / 3.5, -0.4, 0.15]}
+        position={[0, 0.4, 0]}
+      >
+        {ringMat("#b8943e", 0.12, 0.85)}
+      </Torus>
 
-      <Float speed={1.3} rotationIntensity={0.3} floatIntensity={0.5}>
-        <Torus
-          args={[2.4, 0.05, 32, 128]}
-          rotation={[-Math.PI / 4.5, 0.8, -0.2]}
-        >
-          <meshStandardMaterial
-            color="#dfc399"
-            roughness={0.1}
-            metalness={1}
-            transparent
-            opacity={0.8}
-          />
-        </Torus>
-      </Float>
-
-      <Float speed={0.5} rotationIntensity={0.1} floatIntensity={0.2}>
-        <Torus
-          args={[4.2, 0.035, 32, 128]}
-          rotation={[Math.PI / 2.2, 0.4, -0.5]}
-        >
-          <meshStandardMaterial
-            color="#c9a96e"
-            roughness={0.22}
-            metalness={0.9}
-            transparent
-            opacity={0.4}
-          />
-        </Torus>
-      </Float>
-
-      <Float speed={0.9} rotationIntensity={0.2} floatIntensity={0.35}>
-        <Torus
-          args={[2.9, 0.04, 32, 128]}
-          rotation={[Math.PI / 1.7, -0.3, 0.7]}
-        >
-          <meshStandardMaterial
-            color="#a68a4b"
-            roughness={0.15}
-            metalness={1}
-            transparent
-            opacity={0.55}
-          />
-        </Torus>
-      </Float>
+      <Torus
+        ref={ring3}
+        args={[2.0, 0.08, 48, 200]}
+        rotation={[Math.PI / 4, 0.5, -0.1]}
+        position={[0, 0.6, 0]}
+      >
+        {ringMat("#c9a050", 0.06, 0.9)}
+      </Torus>
     </group>
   );
 }
 
 function ChromeSpheres() {
+  const refs = [
+    useRef<THREE.Mesh>(null),
+    useRef<THREE.Mesh>(null),
+    useRef<THREE.Mesh>(null),
+    useRef<THREE.Mesh>(null),
+  ];
+  const basePositions = useMemo(
+    () => [
+      new THREE.Vector3(2.8, 2.5, 1.2),
+      new THREE.Vector3(-2.0, 2.8, 0.6),
+      new THREE.Vector3(1.8, -1.8, 1.0),
+      new THREE.Vector3(-3.0, 0.2, -0.4),
+    ],
+    [],
+  );
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    const sp = heroScrollProgress.current;
+    refs.forEach((ref, i) => {
+      if (!ref.current) return;
+      const bp = basePositions[i];
+      const drift = 1 + sp * 3;
+      ref.current.position.set(
+        bp.x * drift + Math.sin(t * (0.3 + i * 0.1)) * 0.3,
+        bp.y * drift + Math.sin(t * (0.4 + i * 0.15)) * 0.4,
+        bp.z * drift + Math.cos(t * (0.2 + i * 0.1)) * 0.2,
+      );
+    });
+  });
+
+  const sizes = [0.18, 0.12, 0.09, 0.14];
+
   return (
     <>
-      <Float speed={2.5} rotationIntensity={1} floatIntensity={2}>
-        <Sphere args={[0.18, 32, 32]} position={[2.8, 1.8, 1]}>
+      {refs.map((ref, i) => (
+        <Sphere key={i} ref={ref} args={[sizes[i], 32, 32]}>
           <meshStandardMaterial
-            color="#999"
-            roughness={0.03}
+            color="#cccccc"
+            roughness={0.02}
             metalness={1}
-            envMapIntensity={2}
+            envMapIntensity={2.5}
           />
         </Sphere>
-      </Float>
-      <Float speed={3} rotationIntensity={1.5} floatIntensity={1.5}>
-        <Sphere args={[0.13, 32, 32]} position={[-2, 2.4, 0.5]}>
-          <meshStandardMaterial
-            color="#aaa"
-            roughness={0.03}
-            metalness={1}
-            envMapIntensity={2}
-          />
-        </Sphere>
-      </Float>
-      <Float speed={2} rotationIntensity={0.8} floatIntensity={1}>
-        <Sphere args={[0.09, 32, 32]} position={[1.2, -2.2, 0.8]}>
-          <meshStandardMaterial
-            color="#bbb"
-            roughness={0.03}
-            metalness={1}
-            envMapIntensity={2}
-          />
-        </Sphere>
-      </Float>
-      <Float speed={1.8} rotationIntensity={1.2} floatIntensity={1.8}>
-        <Sphere args={[0.15, 32, 32]} position={[-3.2, -0.5, -0.5]}>
-          <meshStandardMaterial
-            color="#999"
-            roughness={0.03}
-            metalness={1}
-            envMapIntensity={2}
-          />
-        </Sphere>
-      </Float>
+      ))}
     </>
   );
 }
 
 function GoldenParticles() {
+  const ref = useRef<THREE.Points>(null);
   const particlePositions = useMemo(() => {
-    const positions = new Float32Array(350 * 3);
-    for (let i = 0; i < 350; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 16;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 12;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+    const positions = new Float32Array(400 * 3);
+    for (let i = 0; i < 400; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 18;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 14;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 12;
     }
     return positions;
   }, []);
 
+  useFrame((state) => {
+    if (ref.current) {
+      ref.current.rotation.y = state.clock.elapsedTime * 0.008;
+    }
+  });
+
   return (
-    <points>
+    <points ref={ref}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={350}
+          count={400}
           array={particlePositions}
           itemSize={3}
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.025}
+        size={0.03}
         color="#c9a96e"
         transparent
-        opacity={0.5}
+        opacity={0.45}
         sizeAttenuation
       />
     </points>
   );
 }
 
-function LoadingFallback() {
+function MouseGlow() {
+  const lightRef = useRef<THREE.PointLight>(null);
+
+  useFrame(() => {
+    if (!lightRef.current) return;
+    const tx = mouse2D.x * 4;
+    const ty = mouse2D.y * 3 + 0.5;
+    lightRef.current.position.x +=
+      (tx - lightRef.current.position.x) * 0.08;
+    lightRef.current.position.y +=
+      (ty - lightRef.current.position.y) * 0.08;
+  });
+
   return (
-    <mesh>
-      <planeGeometry args={[3, 3]} />
-      <meshStandardMaterial color="#c9a96e" wireframe />
-    </mesh>
+    <pointLight
+      ref={lightRef}
+      position={[0, 0.5, 4]}
+      intensity={1.2}
+      color="#e8c864"
+      distance={8}
+      decay={2}
+    />
   );
 }
 
@@ -246,30 +287,32 @@ export function HeroScene() {
         className="pointer-events-none absolute inset-0 z-[1]"
         style={{
           background: `
-            radial-gradient(ellipse 90% 70% at 50% 50%, rgba(201,169,110,0.18) 0%, transparent 70%),
-            radial-gradient(ellipse 50% 40% at 65% 35%, rgba(201,169,110,0.12) 0%, transparent 55%),
-            radial-gradient(ellipse 45% 50% at 30% 65%, rgba(140,110,50,0.08) 0%, transparent 50%)
+            radial-gradient(ellipse 50% 70% at 78% 38%, rgba(180,140,50,0.32) 0%, transparent 70%),
+            radial-gradient(ellipse 60% 50% at 85% 55%, rgba(160,120,40,0.18) 0%, transparent 60%),
+            radial-gradient(ellipse 30% 40% at 18% 55%, rgba(140,110,40,0.08) 0%, transparent 50%),
+            radial-gradient(ellipse 80% 60% at 50% 50%, rgba(100,80,30,0.06) 0%, transparent 80%)
           `,
         }}
       />
       <Canvas
-        camera={{ position: [0, 0, 7], fov: 45 }}
+        camera={{ position: [0, 0, 8], fov: 42 }}
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
         style={{ background: "transparent" }}
         className="relative z-[2]"
       >
-        <Suspense fallback={<LoadingFallback />}>
-          <ambientLight intensity={0.4} />
-          <directionalLight position={[5, 5, 5]} intensity={1.2} />
-          <pointLight position={[-5, -5, -5]} intensity={0.5} color="#c9a96e" />
-          <pointLight position={[0, 0, 3]} intensity={1.2} color="#c9a96e" />
-          <pointLight position={[3, 2, 2]} intensity={0.5} color="#dfc399" />
-          <pointLight position={[-3, -2, 2]} intensity={0.3} color="#b8943e" />
+        <Suspense fallback={null}>
+          <ambientLight intensity={0.25} color="#ffe8c0" />
+          <pointLight position={[4, 3, 5]} intensity={2.5} color="#D4AF37" />
+          <pointLight position={[-3, -2, 4]} intensity={1} color="#c9a96e" />
+          <pointLight position={[0, 0.5, 6]} intensity={0.8} color="#ffe0a0" />
+          <MouseGlow />
           <CameraRig />
-          <BirdLogo />
-          <OrbitalRings />
-          <ChromeSpheres />
+          <InteractiveGroup>
+            <BirdLogo />
+            <OrbitalRings />
+            <ChromeSpheres />
+          </InteractiveGroup>
           <GoldenParticles />
           <Environment preset="city" />
         </Suspense>
