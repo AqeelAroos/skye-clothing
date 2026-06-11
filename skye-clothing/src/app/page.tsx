@@ -116,7 +116,8 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.8 }}
-              className="mt-4 font-display text-5xl font-bold uppercase tracking-[0.2em] md:text-7xl lg:text-8xl"
+              className="font-display text-6xl font-bold uppercase tracking-[0.2em] md:text-8xl lg:text-9xl"
+              style={{ opacity: 0.88, mixBlendMode: "lighten" }}
             >
               <span className="hero-gradient-text">SKYE CLOTHING</span>
             </motion.h1>
@@ -125,7 +126,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
-              className="mt-4 text-sm uppercase tracking-[0.3em] text-gray-300"
+              className="mt-3 text-xs uppercase tracking-[0.35em] text-gray-300/90 md:text-sm"
             >
               Elevated Streetwear for the Modern Era
             </motion.p>
@@ -136,15 +137,27 @@ export default function HomePage() {
               transition={{ delay: 1.1 }}
               className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
             >
-              <Link href="/products" className="inline-flex items-center justify-center gap-2 bg-accent px-8 py-3 text-sm font-medium uppercase tracking-widest text-skye-900 transition-all duration-300 hover:bg-white">
+              <Link href="/products" className="inline-flex items-center justify-center gap-2 border border-white/50 bg-transparent px-8 py-3 text-sm font-medium uppercase tracking-widest text-white transition-all duration-300 hover:bg-white hover:text-skye-900">
                 Shop Collection
                 <ArrowRight size={16} />
               </Link>
-              <Link href="/collections/new-arrivals" className="inline-flex items-center justify-center border border-white/40 px-8 py-3 text-sm font-medium uppercase tracking-widest text-white transition-all duration-300 hover:border-accent hover:text-accent">
+              <Link href="/collections/new-arrivals" className="inline-flex items-center justify-center border border-white/30 px-8 py-3 text-sm font-medium uppercase tracking-widest text-white transition-all duration-300 hover:border-accent hover:text-accent">
                 New Arrivals
               </Link>
             </motion.div>
           </div>
+        </motion.div>
+
+        {/* 4-pointed sparkle decoration */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1.8, duration: 0.6 }}
+          className="absolute bottom-24 right-8 z-10 text-white/80 md:bottom-32 md:right-16"
+        >
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+            <path d="M16 0 L18 14 L32 16 L18 18 L16 32 L14 18 L0 16 L14 14 Z" />
+          </svg>
         </motion.div>
 
         <motion.div
@@ -156,12 +169,12 @@ export default function HomePage() {
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ repeat: Infinity, duration: 1.5 }}
-            className="h-8 w-5 rounded-full border-2 border-gray-400"
+            className="flex h-8 w-5 items-start justify-center rounded-full border-2 border-gray-400/50"
           >
             <motion.div
               animate={{ y: [0, 12, 0] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
-              className="mx-auto mt-1 h-2 w-1 rounded-full bg-accent"
+              className="mt-1 h-2 w-1 rounded-full bg-accent"
             />
           </motion.div>
         </motion.div>
