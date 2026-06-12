@@ -220,12 +220,12 @@ export default function HomePage() {
               style={{
                 fontSize: "clamp(2rem, 6.2vw, 8rem)",
                 letterSpacing: "0.1em",
-                color: "#C9A96E",
+                color: "#e0e8f0",
                 textShadow: `
-                  0 1px 0 rgba(255,240,200,0.2),
-                  0 -1px 2px rgba(0,0,0,0.5),
-                  0 3px 8px rgba(0,0,0,0.4),
-                  0 0 50px rgba(201,169,110,0.15)
+                  0 1px 0 rgba(160,200,255,0.15),
+                  0 -1px 2px rgba(0,0,0,0.6),
+                  0 3px 8px rgba(0,0,0,0.5),
+                  0 0 40px rgba(60,120,200,0.2)
                 `,
                 perspective: "800px",
               }}
@@ -257,7 +257,7 @@ export default function HomePage() {
             >
               <Link
                 href="/products"
-                className="inline-flex items-center justify-center gap-2 bg-[#C5A059] px-8 py-3 text-sm font-semibold uppercase tracking-widest text-[#1a1206] transition-all duration-300 hover:bg-[#d4b06a]"
+                className="inline-flex items-center justify-center gap-2 border border-white/50 bg-white/10 px-8 py-3 text-sm font-semibold uppercase tracking-widest text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/20"
               >
                 Shop Collection
                 <ArrowRight size={16} />
@@ -302,7 +302,7 @@ export default function HomePage() {
               <motion.div
                 animate={{ y: [0, 12, 0] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
-                className="mt-1.5 h-1.5 w-1 rounded-full bg-[#c9a96e]"
+                className="mt-1.5 h-1.5 w-1 rounded-full bg-white/70"
               />
             </motion.div>
           </motion.div>

@@ -48,10 +48,8 @@ function InteractiveGroup({ children }: { children: React.ReactNode }) {
 
   useFrame(() => {
     if (!groupRef.current) return;
-
     targetRotation.current.y = mouse2D.x * 0.35;
     targetRotation.current.x = -mouse2D.y * 0.25;
-
     groupRef.current.rotation.y +=
       (targetRotation.current.y - groupRef.current.rotation.y) * 0.06;
     groupRef.current.rotation.x +=
@@ -93,11 +91,68 @@ function BirdLogo() {
   );
 }
 
+function StardustRing({
+  radius,
+  rotation,
+  position,
+  ringRef,
+}: {
+  radius: number;
+  rotation: [number, number, number];
+  position: [number, number, number];
+  ringRef: React.RefObject<THREE.Group | null>;
+}) {
+  const additiveMat = (color: string, opacity: number) => (
+    <meshBasicMaterial
+      color={color}
+      transparent
+      opacity={opacity}
+      blending={THREE.AdditiveBlending}
+      depthWrite={false}
+      toneMapped={false}
+      side={THREE.DoubleSide}
+    />
+  );
+
+  const r = radius;
+
+  return (
+    <group ref={ringRef} rotation={rotation} position={position}>
+      {/* Thin bright core */}
+      <Torus args={[r, 0.018, 32, 300]}>
+        {additiveMat("#a0c8ff", 0.6)}
+      </Torus>
+
+      {/* Inner white-blue glow */}
+      <Torus args={[r, 0.04, 32, 300]}>
+        {additiveMat("#c0d8ff", 0.35)}
+      </Torus>
+
+      {/* Mid blue aura */}
+      <Torus args={[r, 0.08, 24, 300]}>
+        {additiveMat("#4080d0", 0.15)}
+      </Torus>
+
+      {/* Outer soft bloom */}
+      <Torus args={[r, 0.15, 16, 300]}>
+        {additiveMat("#2050a0", 0.06)}
+      </Torus>
+
+      {/* Sparkle wisps */}
+      <Torus args={[r * 1.02, 0.05, 16, 300]} rotation={[0.1, 0.18, 0]}>
+        {additiveMat("#80b0ff", 0.12)}
+      </Torus>
+      <Torus args={[r * 0.98, 0.04, 16, 300]} rotation={[-0.08, -0.12, 0.06]}>
+        {additiveMat("#6090e0", 0.1)}
+      </Torus>
+    </group>
+  );
+}
+
 function OrbitalRings() {
   const ringsRef = useRef<THREE.Group>(null);
-  const ring1 = useRef<THREE.Mesh>(null);
-  const ring2 = useRef<THREE.Mesh>(null);
-  const ring3 = useRef<THREE.Mesh>(null);
+  const ring1 = useRef<THREE.Group>(null);
+  const ring2 = useRef<THREE.Group>(null);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
@@ -108,65 +163,35 @@ function OrbitalRings() {
       ringsRef.current.rotation.y = t * 0.04;
     }
 
-    [ring1, ring2, ring3].forEach((ref) => {
-      if (ref.current) {
-        ref.current.scale.setScalar(expansion);
-      }
-    });
-
-    if (ring1.current)
+    if (ring1.current) {
+      ring1.current.scale.setScalar(expansion);
       ring1.current.rotation.z = t * 0.07 + sp * Math.PI * 0.5;
-    if (ring2.current)
+    }
+    if (ring2.current) {
+      ring2.current.scale.setScalar(expansion);
       ring2.current.rotation.z = -t * 0.05 + sp * Math.PI * 0.3;
-    if (ring3.current)
-      ring3.current.rotation.x =
-        -Math.PI / 4.5 + t * 0.04 + sp * Math.PI * 0.4;
+    }
   });
-
-  const ringMat = (color: string, opacity: number) => (
-    <meshBasicMaterial
-      color={color}
-      transparent
-      opacity={opacity}
-      blending={THREE.AdditiveBlending}
-      depthWrite={false}
-      toneMapped={false}
-    />
-  );
 
   return (
     <group ref={ringsRef}>
-      <Torus
-        ref={ring1}
-        args={[1.8, 0.015, 48, 200]}
+      <StardustRing
+        ringRef={ring1}
+        radius={1.9}
         rotation={[Math.PI / 5, 0.15, 0]}
         position={[0, 0.7, 0]}
-      >
-        {ringMat("#c9a96e", 0.35)}
-      </Torus>
-
-      <Torus
-        ref={ring2}
-        args={[2.1, 0.012, 48, 200]}
+      />
+      <StardustRing
+        ringRef={ring2}
+        radius={2.2}
         rotation={[Math.PI / 3.5, -0.4, 0.15]}
         position={[0, 0.6, 0]}
-      >
-        {ringMat("#e8c864", 0.25)}
-      </Torus>
-
-      <Torus
-        ref={ring3}
-        args={[1.5, 0.018, 48, 200]}
-        rotation={[Math.PI / 4, 0.5, -0.1]}
-        position={[0, 0.8, 0]}
-      >
-        {ringMat("#d4af37", 0.3)}
-      </Torus>
+      />
     </group>
   );
 }
 
-function ChromeSpheres() {
+function CosmicSpheres() {
   const refs = [
     useRef<THREE.Mesh>(null),
     useRef<THREE.Mesh>(null),
@@ -198,17 +223,19 @@ function ChromeSpheres() {
     });
   });
 
-  const sizes = [0.18, 0.12, 0.09, 0.14];
+  const sizes = [0.16, 0.11, 0.08, 0.13];
 
   return (
     <>
       {refs.map((ref, i) => (
         <Sphere key={i} ref={ref} args={[sizes[i], 32, 32]}>
           <meshStandardMaterial
-            color="#cccccc"
-            roughness={0.02}
-            metalness={1}
-            envMapIntensity={2.5}
+            color="#c0c8d8"
+            emissive="#404860"
+            emissiveIntensity={0.3}
+            roughness={0.7}
+            metalness={0.1}
+            envMapIntensity={0.6}
           />
         </Sphere>
       ))}
@@ -216,21 +243,21 @@ function ChromeSpheres() {
   );
 }
 
-function GoldenParticles() {
+function CosmicParticles() {
   const ref = useRef<THREE.Points>(null);
   const particlePositions = useMemo(() => {
-    const positions = new Float32Array(400 * 3);
-    for (let i = 0; i < 400; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 18;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 14;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 12;
+    const positions = new Float32Array(600 * 3);
+    for (let i = 0; i < 600; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 20;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 16;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 14;
     }
     return positions;
   }, []);
 
   useFrame((state) => {
     if (ref.current) {
-      ref.current.rotation.y = state.clock.elapsedTime * 0.008;
+      ref.current.rotation.y = state.clock.elapsedTime * 0.005;
     }
   });
 
@@ -239,16 +266,16 @@ function GoldenParticles() {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={400}
+          count={600}
           array={particlePositions}
           itemSize={3}
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.03}
-        color="#c9a96e"
+        size={0.025}
+        color="#a0c0ff"
         transparent
-        opacity={0.45}
+        opacity={0.6}
         sizeAttenuation
       />
     </points>
@@ -272,8 +299,8 @@ function MouseGlow() {
     <pointLight
       ref={lightRef}
       position={[0, 0.5, 4]}
-      intensity={1.2}
-      color="#e8c864"
+      intensity={0.8}
+      color="#4080c0"
       distance={8}
       decay={2}
     />
@@ -282,15 +309,46 @@ function MouseGlow() {
 
 export function HeroScene() {
   return (
-    <div className="absolute inset-0 z-0 overflow-hidden bg-black">
+    <div className="absolute inset-0 z-0 overflow-hidden">
+      {/* Cosmic space background */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(ellipse 80% 60% at 50% 50%, #0a1628 0%, #050d18 100%)
+          `,
+        }}
+      />
+      {/* Nebula clouds */}
       <div
         className="pointer-events-none absolute inset-0 z-[1]"
         style={{
           background: `
-            radial-gradient(ellipse 50% 70% at 78% 38%, rgba(180,140,50,0.32) 0%, transparent 70%),
-            radial-gradient(ellipse 60% 50% at 85% 55%, rgba(160,120,40,0.18) 0%, transparent 60%),
-            radial-gradient(ellipse 30% 40% at 18% 55%, rgba(140,110,40,0.08) 0%, transparent 50%),
-            radial-gradient(ellipse 80% 60% at 50% 50%, rgba(100,80,30,0.06) 0%, transparent 80%)
+            radial-gradient(ellipse 45% 55% at 75% 40%, rgba(30,60,140,0.4) 0%, transparent 70%),
+            radial-gradient(ellipse 50% 45% at 20% 60%, rgba(20,50,120,0.3) 0%, transparent 65%),
+            radial-gradient(ellipse 35% 40% at 85% 70%, rgba(40,80,160,0.25) 0%, transparent 55%),
+            radial-gradient(ellipse 30% 35% at 10% 30%, rgba(25,55,130,0.2) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 50% at 50% 45%, rgba(15,35,80,0.15) 0%, transparent 75%)
+          `,
+        }}
+      />
+      {/* Star sparkles via CSS */}
+      <div
+        className="pointer-events-none absolute inset-0 z-[1]"
+        style={{
+          background: `
+            radial-gradient(1px 1px at 15% 25%, rgba(180,210,255,0.9) 0%, transparent 100%),
+            radial-gradient(1px 1px at 82% 18%, rgba(200,220,255,0.8) 0%, transparent 100%),
+            radial-gradient(2px 2px at 45% 85%, rgba(160,200,255,0.7) 0%, transparent 100%),
+            radial-gradient(1px 1px at 68% 72%, rgba(180,210,255,0.6) 0%, transparent 100%),
+            radial-gradient(1px 1px at 25% 68%, rgba(200,225,255,0.7) 0%, transparent 100%),
+            radial-gradient(2px 2px at 90% 55%, rgba(170,200,255,0.8) 0%, transparent 100%),
+            radial-gradient(1px 1px at 55% 12%, rgba(190,215,255,0.6) 0%, transparent 100%),
+            radial-gradient(1px 1px at 8% 82%, rgba(180,210,255,0.5) 0%, transparent 100%),
+            radial-gradient(1px 1px at 35% 42%, rgba(200,220,255,0.4) 0%, transparent 100%),
+            radial-gradient(2px 2px at 72% 38%, rgba(160,200,255,0.6) 0%, transparent 100%),
+            radial-gradient(1px 1px at 5% 50%, rgba(190,220,255,0.5) 0%, transparent 100%),
+            radial-gradient(1px 1px at 95% 85%, rgba(180,210,255,0.4) 0%, transparent 100%)
           `,
         }}
       />
@@ -302,19 +360,19 @@ export function HeroScene() {
         className="relative z-[2]"
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.25} color="#ffe8c0" />
-          <pointLight position={[4, 3, 5]} intensity={2.5} color="#D4AF37" />
-          <pointLight position={[-3, -2, 4]} intensity={1} color="#c9a96e" />
-          <pointLight position={[0, 0.5, 6]} intensity={0.8} color="#ffe0a0" />
+          <ambientLight intensity={0.15} color="#a0c0e0" />
+          <pointLight position={[4, 3, 5]} intensity={1.5} color="#4080c0" />
+          <pointLight position={[-3, -2, 4]} intensity={0.8} color="#3060a0" />
+          <pointLight position={[0, 0.5, 6]} intensity={0.5} color="#c0d8ff" />
           <MouseGlow />
           <CameraRig />
           <InteractiveGroup>
             <BirdLogo />
             <OrbitalRings />
-            <ChromeSpheres />
+            <CosmicSpheres />
           </InteractiveGroup>
-          <GoldenParticles />
-          <Environment preset="city" />
+          <CosmicParticles />
+          <Environment preset="night" />
         </Suspense>
       </Canvas>
     </div>

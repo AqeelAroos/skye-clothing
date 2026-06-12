@@ -57,7 +57,7 @@ export function Navbar() {
           "fixed left-0 right-0 top-0 z-50 transition-all duration-500",
           scrolled
             ? "glass py-3 shadow-sm"
-            : "bg-transparent py-5"
+            : "bg-transparent py-5 text-white"
         )}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 lg:px-8">
@@ -75,7 +75,7 @@ export function Navbar() {
               alt="Skye Clothing"
               width={120}
               height={48}
-              className="h-10 w-auto object-contain dark:invert"
+              className={cn("h-10 w-auto object-contain", scrolled ? "dark:invert" : "invert")}
               priority
             />
           </Link>
